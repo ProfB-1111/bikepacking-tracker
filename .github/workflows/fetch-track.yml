@@ -2,10 +2,14 @@ name: Fetch Track
 
 on:
   schedule:
-    # Runs every 15 minutes. GitHub Actions cron is a minimum-interval
-    # scheduler, not exact-timing - actual runs may lag a few minutes
-    # during high load, which is fine for this use case.
-    - cron: "*/15 * * * *"
+    # Runs every 5 minutes (GitHub Actions' minimum cron interval).
+    # Garmin's Feed/Share endpoint only ever exposes the device's current
+    # position, not a history - any ping superseded by a newer one between
+    # polls is lost for good. Polling this tightly is what keeps the gap
+    # between "device pings" and "what we capture" as small as possible.
+    # GitHub's cron is minimum-interval, not exact-timing - actual runs
+    # may still lag a few minutes during high load.
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}  # lets you trigger it manually from the Actions tab
 
 jobs:
