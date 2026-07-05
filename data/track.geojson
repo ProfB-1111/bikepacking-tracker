@@ -26,6 +26,19 @@
           42.52991
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-07-05T23:04:00Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -114.378296,
+          42.52991
+        ]
+      }
     }
   ]
 }
