@@ -40,7 +40,10 @@ function groupFeaturesByDay(features) {
   return groups;
 }
 
-function renderDayList(groups) {
+// preserveSelection: keep the currently-selected day active across a
+// re-render (used when photos.js merges in photo-only days later) rather
+// than always jumping back to the most recent day.
+function renderDayList(groups, preserveSelection) {
   const container = document.getElementById("day-list");
   container.innerHTML = "";
 
@@ -53,16 +56,19 @@ function renderDayList(groups) {
   sortedKeys.forEach((key) => {
     const item = document.createElement("div");
     item.className = "day-item";
-    item.textContent = `${key} (${groups[key].length} pts)`;
+    const count = groups[key].length;
+    item.textContent = count ? `${key} (${count} pts)` : `${key} (photos only)`;
     item.dataset.dayKey = key;
     item.addEventListener("click", () => selectDay(key, groups[key], item));
     container.appendChild(item);
   });
 
-  // Auto-select the most recent day on load
-  const lastKey = sortedKeys[sortedKeys.length - 1];
-  const lastItem = container.querySelector(`[data-day-key="${lastKey}"]`);
-  selectDay(lastKey, groups[lastKey], lastItem);
+  const keyToSelect =
+    preserveSelection && window.tracker.currentDayKey && groups[window.tracker.currentDayKey]
+      ? window.tracker.currentDayKey
+      : sortedKeys[sortedKeys.length - 1]; // otherwise auto-select the most recent day
+  const itemToSelect = container.querySelector(`[data-day-key="${keyToSelect}"]`);
+  selectDay(keyToSelect, groups[keyToSelect], itemToSelect);
 }
 
 function selectDay(dayKey, dayFeatures, itemEl) {
@@ -110,3 +116,19 @@ document.addEventListener("tracker:data-loaded", () => {
   window.tracker.dayGroups = groups;
   renderDayList(groups);
 });
+
+// Called by photos.js once photos are matched - folds in any day that has
+// photos but no track points yet (e.g. days before the Fetch Track Action
+// started polling) so those days are still visible and selectable.
+window.tracker.addPhotoOnlyDays = function (dayKeys) {
+  const groups = window.tracker.dayGroups || {};
+  let changed = false;
+  dayKeys.forEach((key) => {
+    if (!groups[key]) {
+      groups[key] = [];
+      changed = true;
+    }
+  });
+  window.tracker.dayGroups = groups;
+  if (changed) renderDayList(groups, true);
+};

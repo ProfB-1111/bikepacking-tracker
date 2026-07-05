@@ -233,6 +233,16 @@ function renderPhotosForDay(dayKey) {
     : window.tracker.photos;
   renderPhotoMarkers(dayPhotos);
   renderPhotoList(dayPhotos);
+
+  // Days with photos but no track points (e.g. before Fetch Track started
+  // polling) get no green segment from day-view.js to fit to - fit to the
+  // photo locations instead so selecting the day actually moves the map.
+  const trackPointsForDay = (window.tracker.dayGroups && window.tracker.dayGroups[dayKey]) || [];
+  if (dayPhotos.length && trackPointsForDay.length === 0) {
+    const bounds = new google.maps.LatLngBounds();
+    dayPhotos.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
+    fitBoundsClamped(window.tracker.map, bounds, 15);
+  }
 }
 
 async function initPhotos() {
@@ -273,6 +283,10 @@ async function initPhotos() {
     });
 
     window.tracker.photos = photos;
+
+    const photoDayKeys = [...new Set(photos.map((p) => p.dayKey))];
+    if (window.tracker.addPhotoOnlyDays) window.tracker.addPhotoOnlyDays(photoDayKeys);
+
     renderPhotosForDay(window.tracker.currentDayKey);
   } catch (err) {
     console.error(err);
