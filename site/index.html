@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bikepacking Tracker</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <h1>Ride Tracker</h1>
+    <div id="status-line" class="status-line">Loading…</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>View</h2>
+        <div class="button-row">
+          <button id="btn-fit-route" class="btn">Whole route</button>
+          <button id="btn-fit-today" class="btn">Latest position</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Day</h2>
+        <div id="day-list" class="day-list">
+          <!-- populated by day-view.js -->
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Photos</h2>
+        <div id="photo-list" class="photo-list">
+          <!-- populated by photos.js -->
+        </div>
+      </section>
+    </aside>
+
+    <main class="map-wrap">
+      <div id="map"></div>
+    </main>
+  </div>
+
+  <!-- Data + rendering logic -->
+  <script src="js/map-init.js"></script>
+  <script src="js/day-view.js"></script>
+  <script src="js/zoom-controls.js"></script>
+  <script src="js/photos.js"></script>
+
+  <!-- Google Maps JS API - replace YOUR_API_KEY_HERE once you've
+       generated a restricted key in Google Cloud Console -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQ0Ae6MiQwVOULQRF6wE0_NwL392jUsAg&callback=initMap"
+    async defer>
+  </script>
+</body>
+</html>

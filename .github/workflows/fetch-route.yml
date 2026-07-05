@@ -1,0 +1,35 @@
+name: Fetch Route
+
+on:
+  schedule:
+    # Runs once daily at 06:00 UTC. Adjust the cron expression if you
+    # want a different time (fields are: minute hour day month weekday).
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}  # lets you trigger it manually from the Actions tab
+
+jobs:
+  fetch-route:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch route and convert to GeoJSON
+        env:
+          MYMAPS_ID: "1hEtjfG36Mllh9n_YwuIv_vZprvA6zLQ"
+        run: python scripts/fetch_route.py
+
+      - name: Commit updated route.geojson if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/route.geojson
+          git diff --quiet --cached || git commit -m "Update route.geojson [automated]"
+          git push

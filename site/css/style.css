@@ -1,0 +1,201 @@
+:root {
+  --bg: #14181a;
+  --panel: #1d2326;
+  --panel-border: #2b3236;
+  --text: #e7e9e5;
+  --muted: #8b969b;
+  --accent: #c76b3e;   /* rust/trail-orange - today's segment marker color in UI, not the map green */
+  --track-gray: #6b7478;
+  --track-green: #4caf6a;
+  --font-body: "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.topbar h1 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.status-line {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.layout {
+  display: flex;
+  height: calc(100vh - 49px);
+}
+
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--panel-border);
+  padding: 16px;
+}
+
+.panel {
+  margin-bottom: 24px;
+}
+
+.panel h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 10px 0;
+}
+
+.button-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+}
+
+.day-list, .photo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-item {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--text);
+}
+
+.day-item:hover {
+  border-color: var(--panel-border);
+}
+
+.day-item.active {
+  background: var(--panel);
+  border-color: var(--track-green);
+  color: var(--track-green);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.map-wrap {
+  flex: 1;
+  position: relative;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.photo-item:hover {
+  border-color: var(--panel-border);
+}
+
+.photo-item img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.photo-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.photo-item-time {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.photo-item.approximate img {
+  outline: 2px dashed var(--muted);
+  outline-offset: -2px;
+}
+
+.photo-item-approx {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.photo-infowindow {
+  font-family: var(--font-body);
+  color: #14181a;
+  max-width: 200px;
+}
+
+.photo-infowindow img {
+  width: 100%;
+  border-radius: 4px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.photo-infowindow .photo-time {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.photo-infowindow .photo-approx-note {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #6b7478;
+  margin-top: 4px;
+}
