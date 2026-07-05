@@ -12,12 +12,20 @@ window.tracker = {
   routeData: null,      // raw GeoJSON for the planned route
   trackData: null,      // raw GeoJSON for the full track log
   routePolylines: [],   // rendered route Polyline objects
-  trackPolyline: null,  // full-trip track Polyline (gray)
-  dayPolyline: null,    // highlighted single-day segment (green)
+  trackPolylines: [],   // full-trip track Polylines (gray), one per segment
+  dayPolylines: [],     // highlighted single-day segment Polylines (green), one per segment
   latestMarker: null,   // marker at the most recent track point
 };
 
 const DATA_BASE_PATH = "../data"; // adjust if index.html moves relative to /data
+
+// Gaps longer than this split the track into separate segments instead of
+// drawing a connecting line through them - e.g. driving between
+// trailheads, or tracking manually turned off/on between rides. Garmin's
+// feed doesn't expose a reliable "tracking off" event we could key off
+// instead (it only ever surfaces the device's current status, not a
+// history - see SETUP.md), so this time-gap heuristic is the fallback.
+const TRACK_GAP_THRESHOLD_MINUTES = 75;
 
 async function loadJSON(path) {
   const res = await fetch(path, { cache: "no-store" });
@@ -70,31 +78,60 @@ function renderRoute(map, geojson) {
   return polylines;
 }
 
-function trackFeaturesToPath(features) {
+function sortedTrackFeatures(features) {
   return features
     .slice()
-    .sort((a, b) => a.properties.timestamp.localeCompare(b.properties.timestamp))
-    .map((f) => ({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] }));
+    .sort((a, b) => a.properties.timestamp.localeCompare(b.properties.timestamp));
+}
+
+function featuresToPath(features) {
+  return features.map((f) => ({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] }));
+}
+
+// Splits chronologically-sorted features into separate segments wherever
+// the time gap between consecutive points exceeds
+// TRACK_GAP_THRESHOLD_MINUTES, so unrelated rides don't get a straight
+// line drawn between them.
+function splitIntoTrackSegments(sortedFeatures) {
+  const segments = [];
+  let current = [];
+
+  sortedFeatures.forEach((f, i) => {
+    if (i > 0) {
+      const prevMs = new Date(sortedFeatures[i - 1].properties.timestamp).getTime();
+      const thisMs = new Date(f.properties.timestamp).getTime();
+      const gapMinutes = (thisMs - prevMs) / 60000;
+      if (gapMinutes > TRACK_GAP_THRESHOLD_MINUTES) {
+        segments.push(current);
+        current = [];
+      }
+    }
+    current.push(f);
+  });
+
+  if (current.length) segments.push(current);
+  return segments;
 }
 
 function renderFullTrack(map, geojson) {
-  const path = trackFeaturesToPath(geojson.features);
-  const polyline = new google.maps.Polyline({
-    path,
-    strokeColor: "#6b7478", // gray - matches --track-gray
-    strokeOpacity: 0.8,
-    strokeWeight: 3,
+  const segments = splitIntoTrackSegments(sortedTrackFeatures(geojson.features));
+
+  return segments.map((segmentFeatures) => {
+    const polyline = new google.maps.Polyline({
+      path: featuresToPath(segmentFeatures),
+      strokeColor: "#6b7478", // gray - matches --track-gray
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+    });
+    polyline.setMap(map);
+    return polyline;
   });
-  polyline.setMap(map);
-  return polyline;
 }
 
 function renderLatestMarker(map, geojson) {
   if (!geojson.features.length) return null;
 
-  const sorted = geojson.features
-    .slice()
-    .sort((a, b) => a.properties.timestamp.localeCompare(b.properties.timestamp));
+  const sorted = sortedTrackFeatures(geojson.features);
   const last = sorted[sorted.length - 1];
 
   return new google.maps.Marker({
@@ -175,7 +212,7 @@ async function initMap() {
     window.tracker.trackData = trackData;
 
     window.tracker.routePolylines = renderRoute(map, routeData);
-    window.tracker.trackPolyline = renderFullTrack(map, trackData);
+    window.tracker.trackPolylines = renderFullTrack(map, trackData);
     window.tracker.latestMarker = renderLatestMarker(map, trackData);
 
     fitToAllData(map, routeData, trackData);

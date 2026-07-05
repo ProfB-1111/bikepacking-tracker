@@ -79,31 +79,29 @@ function selectDay(dayKey, dayFeatures, itemEl) {
   const map = window.tracker.map;
 
   // Clear previous day highlight
-  if (window.tracker.dayPolyline) {
-    window.tracker.dayPolyline.setMap(null);
-  }
+  (window.tracker.dayPolylines || []).forEach((line) => line.setMap(null));
 
-  const sorted = dayFeatures
-    .slice()
-    .sort((a, b) => a.properties.timestamp.localeCompare(b.properties.timestamp));
-  const path = sorted.map((f) => ({
-    lat: f.geometry.coordinates[1],
-    lng: f.geometry.coordinates[0],
-  }));
+  // Split on the same gap heuristic as the full track (map-init.js) so a
+  // day that happens to span a tracking-off/on gap doesn't draw a
+  // spurious connecting line either.
+  const sorted = sortedTrackFeatures(dayFeatures);
+  const segments = splitIntoTrackSegments(sorted);
 
-  const dayPolyline = new google.maps.Polyline({
-    path,
-    strokeColor: "#4caf6a", // green - matches --track-green
-    strokeOpacity: 1,
-    strokeWeight: 4,
+  window.tracker.dayPolylines = segments.map((segmentFeatures) => {
+    const dayPolyline = new google.maps.Polyline({
+      path: featuresToPath(segmentFeatures),
+      strokeColor: "#4caf6a", // green - matches --track-green
+      strokeOpacity: 1,
+      strokeWeight: 4,
+    });
+    dayPolyline.setMap(map);
+    return dayPolyline;
   });
-  dayPolyline.setMap(map);
-  window.tracker.dayPolyline = dayPolyline;
   window.tracker.currentDayKey = dayKey;
 
-  if (path.length) {
+  if (sorted.length) {
     const bounds = new google.maps.LatLngBounds();
-    path.forEach((p) => bounds.extend(p));
+    sorted.forEach((f) => bounds.extend({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] }));
     fitBoundsClamped(map, bounds, 15);
   }
 
