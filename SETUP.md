@@ -40,5 +40,18 @@ everything's wired up correctly.
   to match against yet — they'll show up flagged "approximate" rather
   than disappearing or mis-placing. This resolves itself as track
   history accumulates.
+- **Known limitation: `track.geojson` will be sparser than the device's
+  own point log.** Garmin's `Feed/Share/{ID}` endpoint only ever exposes
+  the device's *current* position — confirmed by repeatedly polling it
+  during and after a real ride — not a history of every ping. We only
+  capture whatever is "current" at the exact moment `fetch-track.yml`
+  happens to run, so any ping superseded by a newer one between polls is
+  lost for good, not recoverable after the fact. `fetch-track.yml` polls
+  every 5 minutes (GitHub Actions' minimum cron interval), and GitHub's
+  scheduler can itself lag past that on busy periods, so on an active
+  ride the captured trail will have real gaps. This has been accepted
+  as a best-effort tradeoff rather than adding an external cron service
+  to poll tighter than GitHub allows — over a multi-week trip the
+  overall route shape still comes through fine, just not every ping.
 - Phase 2 items (audio notes, messaging terminal) are intentionally not
   built yet — see README.md.
