@@ -88,20 +88,34 @@ function featuresToPath(features) {
   return features.map((f) => ({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] }));
 }
 
+// fetch_track.py stores the Garmin feed's ExtendedData "Event" field when
+// present (e.g. "Tracking message received." vs "Tracking turned off from
+// device."). Older points fetched before this was added won't have it -
+// that's fine, it's only ever an extra reason to split, never required.
+function isTrackingOffEvent(feature) {
+  const event = feature?.properties?.event;
+  return typeof event === "string" && /turned off/i.test(event);
+}
+
 // Splits chronologically-sorted features into separate segments wherever
-// the time gap between consecutive points exceeds
-// TRACK_GAP_THRESHOLD_MINUTES, so unrelated rides don't get a straight
-// line drawn between them.
+// either (a) the time gap between consecutive points exceeds
+// TRACK_GAP_THRESHOLD_MINUTES, or (b) the earlier point's Event field
+// says tracking was turned off - so unrelated rides don't get a straight
+// line drawn between them. The gap heuristic alone would miss a quick
+// off/on cycle shorter than the threshold; the Event field alone would
+// miss a gap with no clean "off" (dead battery, dead zone) - using both
+// covers each other's blind spot.
 function splitIntoTrackSegments(sortedFeatures) {
   const segments = [];
   let current = [];
 
   sortedFeatures.forEach((f, i) => {
     if (i > 0) {
-      const prevMs = new Date(sortedFeatures[i - 1].properties.timestamp).getTime();
+      const prev = sortedFeatures[i - 1];
+      const prevMs = new Date(prev.properties.timestamp).getTime();
       const thisMs = new Date(f.properties.timestamp).getTime();
       const gapMinutes = (thisMs - prevMs) / 60000;
-      if (gapMinutes > TRACK_GAP_THRESHOLD_MINUTES) {
+      if (gapMinutes > TRACK_GAP_THRESHOLD_MINUTES || isTrackingOffEvent(prev)) {
         segments.push(current);
         current = [];
       }

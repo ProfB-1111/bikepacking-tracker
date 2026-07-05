@@ -32,10 +32,27 @@ def parse_point_coordinates(coord_text):
     return [float(parts[0]), float(parts[1])]
 
 
+def parse_extended_data_event(extended_data_el):
+    """
+    Pulls the value of <Data name="Event"><value>...</value></Data> out of
+    a Placemark's <ExtendedData>, e.g. "Tracking message received." or
+    "Tracking turned off from device." Returns None if not present.
+    """
+    for data_el in extended_data_el:
+        if strip_ns(data_el.tag) != "Data" or data_el.get("name") != "Event":
+            continue
+        for v in data_el:
+            if strip_ns(v.tag) == "value" and v.text:
+                return v.text.strip()
+    return None
+
+
 def parse_feed(kml_bytes):
     """
-    Returns a list of {timestamp, lon, lat} dicts, one per Placemark
-    found in the Garmin feed that has both a Point and a TimeStamp.
+    Returns a list of {timestamp, lon, lat, event} dicts, one per
+    Placemark found in the Garmin feed that has both a Point and a
+    TimeStamp. `event` is None if the Placemark has no ExtendedData
+    Event field.
     """
     root = ET.fromstring(kml_bytes)
     points = []
@@ -46,6 +63,7 @@ def parse_feed(kml_bytes):
 
         timestamp = None
         lon_lat = None
+        event = None
 
         for child in placemark:
             tag = strip_ns(child.tag)
@@ -60,8 +78,16 @@ def parse_feed(kml_bytes):
                     if strip_ns(c.tag) == "coordinates":
                         lon_lat = parse_point_coordinates(c.text)
 
+            elif tag == "ExtendedData":
+                event = parse_extended_data_event(child)
+
         if timestamp and lon_lat:
-            points.append({"timestamp": timestamp, "lon": lon_lat[0], "lat": lon_lat[1]})
+            points.append({
+                "timestamp": timestamp,
+                "lon": lon_lat[0],
+                "lat": lon_lat[1],
+                "event": event,
+            })
 
     return points
 
@@ -98,9 +124,12 @@ def main():
     for p in new_points:
         if p["timestamp"] in existing_timestamps:
             continue
+        properties = {"timestamp": p["timestamp"]}
+        if p.get("event"):
+            properties["event"] = p["event"]
         track["features"].append({
             "type": "Feature",
-            "properties": {"timestamp": p["timestamp"]},
+            "properties": properties,
             "geometry": {"type": "Point", "coordinates": [p["lon"], p["lat"]]},
         })
         existing_timestamps.add(p["timestamp"])

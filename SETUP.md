@@ -53,5 +53,17 @@ everything's wired up correctly.
   as a best-effort tradeoff rather than adding an external cron service
   to poll tighter than GitHub allows — over a multi-week trip the
   overall route shape still comes through fine, just not every ping.
+- **Track/day rendering splits into separate segments across gaps**
+  instead of drawing a straight connecting line between unrelated rides
+  (e.g. driving between trailheads). `fetch_track.py` captures the
+  feed's ExtendedData `Event` field per point (e.g. "Tracking turned off
+  from device."), and `site/js/map-init.js`'s `splitIntoTrackSegments()`
+  splits wherever either the time gap exceeds `TRACK_GAP_THRESHOLD_MINUTES`
+  (75 min) or the earlier point's event says tracking was turned off —
+  the two catch each other's blind spot (a quick off/on cycle shorter
+  than the threshold vs. a gap with no clean "off", like a dead battery
+  or dead zone). Points captured before this was added won't have an
+  `event` property; that's fine, it only ever adds a reason to split,
+  never removes the gap-based one.
 - Phase 2 items (audio notes, messaging terminal) are intentionally not
   built yet — see README.md.
