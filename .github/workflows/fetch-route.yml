@@ -32,4 +32,16 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/route.geojson
           git diff --quiet --cached || git commit -m "Update route.geojson [automated]"
-          git push
+
+          # Retry on push rejection: another workflow run (e.g. Fetch Track,
+          # which polls every 5 min) may have pushed to main in the gap
+          # between this job's checkout and its push.
+          for i in 1 2 3 4 5; do
+            if git push; then
+              break
+            fi
+            echo "Push rejected, rebasing onto origin/main and retrying ($i/5)..."
+            git fetch origin main
+            git rebase origin/main
+            sleep $((RANDOM % 5 + 1))
+          done
