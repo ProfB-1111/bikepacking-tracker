@@ -81,6 +81,20 @@
           43.649228
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-07-08T15:36:45Z",
+        "event": "Tracking turned on from device."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -114.522556,
+          43.649261
+        ]
+      }
     }
   ]
 }
