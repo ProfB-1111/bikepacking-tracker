@@ -431,6 +431,20 @@
           42.816575
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-07-13T02:56:00Z",
+        "event": "Location received."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.026511,
+          42.816531
+        ]
+      }
     }
   ]
 }
