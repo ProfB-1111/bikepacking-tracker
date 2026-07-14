@@ -529,6 +529,20 @@
           42.753166
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-07-14T00:04:45Z",
+        "event": "Tracking interval received."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.571686,
+          42.77191
+        ]
+      }
     }
   ]
 }
