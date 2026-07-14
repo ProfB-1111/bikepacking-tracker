@@ -599,6 +599,20 @@
           42.809986
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-07-14T18:49:30Z",
+        "event": "Tracking message received."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -124.046695,
+          42.716635
+        ]
+      }
     }
   ]
 }
