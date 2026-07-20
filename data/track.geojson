@@ -1187,6 +1187,20 @@
           43.588181
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-07-20T01:14:00Z",
+        "event": "Tracking turned off from device."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.577038,
+          43.62114
+        ]
+      }
     }
   ]
 }
